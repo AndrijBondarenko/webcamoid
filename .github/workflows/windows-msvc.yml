@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       with:
-        submodules: true
+        # submodules: true
         token: ${{ secrets.UPLOAD_TOKEN }}
     - name: Install dependencies
       run: ./ports/ci/windows-msvc/install_deps.bat
