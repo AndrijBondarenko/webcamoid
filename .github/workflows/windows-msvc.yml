@@ -6,8 +6,8 @@ on:
   workflow_dispatch: # Дозволяє запускати збірку вручну кнопкою з інтерфейсу Actions
 
 env:
-  QTVER: 6.10.2
-  FFMPEG_VERSION: 8.0.1
+  QTVER: 6.8.2
+  FFMPEG_VERSION: 7.1
   CMAKE_GENERATOR: Visual Studio 17 2022
 
 jobs:
