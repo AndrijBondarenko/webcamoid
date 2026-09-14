@@ -19,17 +19,27 @@ REM Web-Site: http://webcamoid.github.io/
 rem Install Qt
 pip install -U pip
 pip install aqtinstall
-aqt install-qt windows desktop "%QTVER%" win64_msvc2019_64 -O "C:\Qt"
+
+:: Змінено архітектуру на msvc2022, оскільки msvc2019 більше не постачається для Qt 6.8.2
+aqt install-qt windows desktop "%QTVER%" win64_msvc2022_64 -O "C:\Qt"
 aqt install-tool windows desktop tools_qtcreator -O "C:\Qt"
-set QTDIR=C:\Qt\%QTVER%\msvc2019_64
+
+set QTDIR=C:\Qt\%QTVER%\msvc2022_64
 set TOOLSDIR=C:\Qt\Tools\QtCreator
 set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%PATH%
 
 rem Install FFmpeg development headers and libraries
 set FFMPEG_FILE=ffmpeg-%FFMPEG_VERSION%-full_build-shared.7z
 
-if not exist %FFMPEG_FILE% curl --retry 10 -kLOC - "https://www.gyan.dev/ffmpeg/builds/packages/%FFMPEG_FILE%"
+:: Додано прапорець -f (падати при помилці сервера) та кастомний User-Agent, щоб gyan.dev не блокував запит
+if not exist %FFMPEG_FILE% curl -f --retry 10 -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -kLOC - "https://www.gyan.dev/ffmpeg/builds/packages/%FFMPEG_FILE%"
 
 if exist %FFMPEG_FILE% 7z x %FFMPEG_FILE% -aoa -bb
+
+:: Прокидуємо змінні оточення у наступні кроки GitHub Actions (щоб build.bat та deploy.bat їх бачили)
+if not "%GITHUB_ENV%"=="" echo QTDIR=%QTDIR% >> %GITHUB_ENV%
+if not "%GITHUB_ENV%"=="" echo TOOLSDIR=%TOOLSDIR% >> %GITHUB_ENV%
+if not "%GITHUB_PATH%"=="" echo %QTDIR%\bin >> %GITHUB_PATH%
+if not "%GITHUB_PATH%"=="" echo %TOOLSDIR%\bin >> %GITHUB_PATH%
 
 :Exit
