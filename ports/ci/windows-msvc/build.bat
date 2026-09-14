@@ -16,76 +16,31 @@ REM along with Webcamoid. If not, see <http://www.gnu.org/licenses/>.
 REM
 REM Web-Site: http://webcamoid.github.io/
 
-if not "%GITHUB_SHA%" == "" set GIT_COMMIT_HASH="%GITHUB_SHA%"
+rem Install Qt
+pip install -U pip
+pip install aqtinstall
 
-set QTDIR=C:\Qt\%QTVER%\msvc2019_64
+:: Змінено архітектуру на msvc2022, оскільки msvc2019 більше не постачається для Qt 6.8.2
+aqt install-qt windows desktop "%QTVER%" win64_msvc2022_64 -O "C:\Qt"
+aqt install-tool windows desktop tools_qtcreator -O "C:\Qt"
+
+set QTDIR=C:\Qt\%QTVER%\msvc2022_64
 set TOOLSDIR=C:\Qt\Tools\QtCreator
+set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%PATH%
 
-rem Visual Studio init
-set VSPATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build
-call "%VSPATH%\vcvarsall" amd64
+rem Install FFmpeg development headers and libraries
+set FFMPEG_FILE=ffmpeg-%FFMPEG_VERSION%-full_build-shared.7z
 
-set FFMPEG_PATH=%CD%\ffmpeg-%FFMPEG_VERSION%-full_build-shared
-set PATH_ORIG=%PATH%
+:: Додано прапорець -f (падати при помилці сервера) та кастомний User-Agent, щоб gyan.dev не блокував запит від CI
+if not exist %FFMPEG_FILE% curl -f --retry 10 -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -kLOC - "https://www.gyan.dev/ffmpeg/builds/packages/%FFMPEG_FILE%"
 
-set INSTALL_PREFIX=%CD%\webcamoid-data
-set buildDir=build
-mkdir "%buildDir%"
+:: Архів буде розпаковано лише за умови успішного завантаження
+if exist %FFMPEG_FILE% 7z x %FFMPEG_FILE% -aoa -bb
 
-if not "%DAILY_BUILD%" == "" goto DailyBuild
+:: Прокидуємо змінні оточення у глобальний контекст GitHub Actions для наступних кроків
+if not "%GITHUB_ENV%"=="" echo QTDIR=%QTDIR% >> %GITHUB_ENV%
+if not "%GITHUB_ENV%"=="" echo TOOLSDIR=%TOOLSDIR% >> %GITHUB_ENV%
+if not "%GITHUB_PATH%"=="" echo %QTDIR%\bin >> %GITHUB_PATH%
+if not "%GITHUB_PATH%"=="" echo %TOOLSDIR%\bin >> %GITHUB_PATH%
 
-set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%FFMPEG_PATH%\bin;%PATH%
-
-rem Add FFmpeg includes and libraries paths
-set CXXFLAGS=-I%FFMPEG_PATH%\include
-set LDFLAGS=-L%FFMPEG_PATH%\lib
-set LDFLAGS=%LDFLAGS% -lavcodec
-set LDFLAGS=%LDFLAGS% -lavdevice
-set LDFLAGS=%LDFLAGS% -lavformat
-set LDFLAGS=%LDFLAGS% -lavutil
-set LDFLAGS=%LDFLAGS% -lswresample
-set LDFLAGS=%LDFLAGS% -lswscale
-
-cmake ^
-    -LA ^
-    -S . ^
-    -B "%buildDir%" ^
-    -G "%CMAKE_GENERATOR%" ^
-    -A x64 ^
-    -DCMAKE_BUILD_TYPE=Release ^
-    -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%" ^
-    -DGIT_COMMIT_HASH="%GIT_COMMIT_HASH%"
-
-goto Make
-
-:DailyBuild
-
-set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%FFMPEG_PATH%\bin;%PATH%
-
-rem Add FFmpeg includes and libraries paths
-set CXXFLAGS=-I%FFMPEG_PATH%\include
-set LDFLAGS=-L%FFMPEG_PATH%\lib
-set LDFLAGS=%LDFLAGS% -lavcodec
-set LDFLAGS=%LDFLAGS% -lavdevice
-set LDFLAGS=%LDFLAGS% -lavformat
-set LDFLAGS=%LDFLAGS% -lavutil
-set LDFLAGS=%LDFLAGS% -lswresample
-set LDFLAGS=%LDFLAGS% -lswscale
-
-cmake ^
-    -LA ^
-    -S . ^
-    -B "%buildDir%" ^
-    -G "%CMAKE_GENERATOR%" ^
-    -A x64 ^
-    -DCMAKE_BUILD_TYPE=Release ^
-    -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%" ^
-    -DGIT_COMMIT_HASH="%GIT_COMMIT_HASH%" ^
-    -DDAILY_BUILD=1
-
-:Make
-
-cmake --build "%buildDir%" --config Release
-cmake --build "%buildDir%" --config Release --target install
-
-set PATH=%PATH_ORIG%
+:Exit
