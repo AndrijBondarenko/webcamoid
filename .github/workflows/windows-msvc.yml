@@ -36,12 +36,10 @@ jobs:
       env:
         DAILY_BUILD: 1
       run: ./ports/ci/windows-msvc/deploy.bat
-    - name: Upload Build Artifacts
+
+    # Крок автоматичного збереження скомпільованої програми Webcamoid
+    - name: Upload Webcamoid Program
       uses: actions/upload-artifact@v4
       with:
-        name: windows-msvc-build
-        path: |
-          *.exe
-          *.zip
-          build/
-          dist/
+        name: webcamoid-windows-msvc
+        path: webcamoid-data/
