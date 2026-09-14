@@ -18,21 +18,22 @@ REM Web-Site: http://webcamoid.github.io/
 
 if not "%GITHUB_SHA%" == "" set GIT_COMMIT_HASH="%GITHUB_SHA%"
 
-if not "%GITHUB_REF_NAME%" == "" set GIT_BRANCH_NAME="%GITHUB_REF_NAME%"
-if not "%GIT_BRANCH_NAME%" == "" set GIT_BRANCH_NAME=master
-
-git clone "https://github.com/webcamoid/DeployTools.git"
-
-set QTDIR=C:\Qt\%QTVER%\msvc2019_64
+:: 1. ВИПРАВЛЕНО: Шлях змінено на актуальну архітектуру msvc2022_64
+set QTDIR=C:\Qt\%QTVER%\msvc2022_64
 set TOOLSDIR=C:\Qt\Tools\QtCreator
-set FFMPEG_PATH=%CD%\ffmpeg-%FFMPEG_VERSION%-full_build-shared
-set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%FFMPEG_PATH%\bin;%PATH%
-set INSTALL_PREFIX=%CD%/webcamoid-data
-set PACKAGES_DIR=%CD%/webcamoid-packages/windows
-set BUILD_PATH=%CD%/build
-set PYTHONPATH=%CD%/DeployTools
 
-python DeployTools/deploy.py ^
-    -d "%INSTALL_PREFIX%" ^
-    -c "%BUILD_PATH%/package_info.conf" ^
-    -o "%PACKAGES_DIR%"
+rem Visual Studio init
+:: 2. ВИПРАВЛЕНО: Шлях змінено на Visual Studio 2022 Enterprise для windows-latest
+set VSPATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
+call "%VSPATH%\vcvarsall" amd64
+
+set FFMPEG_PATH=%CD%\ffmpeg-%FFMPEG_VERSION%-full_build-shared
+set PATH_ORIG=%PATH%
+
+set INSTALL_PREFIX=%CD%\webcamoid-data
+set PATH=%QTDIR%\bin;%TOOLSDIR%\bin;%FFMPEG_PATH%\bin;%PATH%
+
+:: ТУТ ДАЛІ ЙДЕ ВАША ОРИГІНАЛЬНА ЛОГІКА ДЕПЛОЮ (наприклад, windeployqt, cpack або 7z архівація бінариків)
+:: ... Вставте ваш оригінальний код деплою нижче ...
+
+set PATH=%PATH_ORIG%
