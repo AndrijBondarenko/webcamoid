@@ -36,8 +36,7 @@ jobs:
       env:
         DAILY_BUILD: 1
       run: ./ports/ci/windows-msvc/deploy.bat
-
-      name: Upload Build Artifacts
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windows-msvc-build
